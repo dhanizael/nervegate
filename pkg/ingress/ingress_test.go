@@ -114,6 +114,32 @@ func TestChatCompletions_PassThroughWithoutPool(t *testing.T) {
 	}
 }
 
+func TestChatCompletions_ExhaustedPoolReturns503(t *testing.T) {
+	calls := 0
+	up := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if calls > 1 {
+			t.Error("upstream must not be reached when the key pool is exhausted")
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"id":"1","choices":[]}`))
+	})
+
+	srv, rot, _ := newTestServer(t, up, Config{})
+	// One key with RPM 1; the first request consumes it.
+	rot.AddKey("openai", &rotator.APIKey{ID: "k1", Key: "sk-aaa", Provider: "openai", RPM: 1})
+
+	if rec := doRequest(t, srv, chatBody(t, "hello"), "Bearer caller-own-key"); rec.Code != http.StatusOK {
+		t.Fatalf("request 1 status = %d, want 200", rec.Code)
+	}
+
+	// Second request: pool configured but exhausted -> 503, no pass-through.
+	rec := doRequest(t, srv, chatBody(t, "hello"), "Bearer caller-own-key")
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf("status = %d, want 503", rec.Code)
+	}
+}
+
 func TestChatCompletions_429MarksCooldown(t *testing.T) {
 	up := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":{"message":"rate limited"}}`, http.StatusTooManyRequests)

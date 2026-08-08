@@ -56,6 +56,13 @@ func (r *KeyRotator) AddKey(provider string, key *APIKey) {
 	r.keys[provider] = append(r.keys[provider], key)
 }
 
+// HasKeys reports whether any keys are registered for the provider.
+func (r *KeyRotator) HasKeys(provider string) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return len(r.keys[provider]) > 0
+}
+
 // pruneWindow drops sliding-window entries older than the window, copying to a
 // fresh slice when entries were pruned so expired records and their backing
 // arrays can be garbage collected. Callers must hold the lock.

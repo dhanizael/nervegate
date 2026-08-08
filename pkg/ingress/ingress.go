@@ -206,10 +206,19 @@ func (s *IngressServer) handleChatCompletions(w http.ResponseWriter, r *http.Req
 
 	// 4. Select an upstream key from the pool. When no key pool is configured
 	// for the provider, fall back to the caller's own Authorization header.
+	// When a pool IS configured but every key is rate limited or cooling down,
+	// fail fast instead of silently leaking the request upstream.
 	var usedKey *rotator.APIKey
-	if key, err := s.rot.GetKey(s.cfg.Provider); err == nil {
+	key, keyErr := s.rot.GetKey(s.cfg.Provider)
+	switch {
+	case keyErr == nil:
 		usedKey = key
 		r.Header.Set("Authorization", "Bearer "+key.Key)
+	case s.rot.HasKeys(s.cfg.Provider):
+		writeJSONError(w, http.StatusServiceUnavailable, "all API keys for provider "+s.cfg.Provider+" are rate limited or cooling down", "rate_limit_error")
+		return
+	default:
+		// No pool configured: pass through the caller's own credentials.
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(s.upstream)
