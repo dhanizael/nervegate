@@ -6,17 +6,29 @@ import (
 	"github.com/hxmdxnx/nervegate/pkg/trimmer"
 )
 
-func TestTrimmer_Trim(t *testing.T) {
+func TestTrimmer_TrimBytes(t *testing.T) {
 	trm := trimmer.New()
 
-	input := "func main()  {\n\n\n\tfmt.Println(\"hello\")   \n}"
-	output, savedBytes := trm.Trim(input)
+	input := []byte("func main()   {\n\n\n\n   fmt.Println(\"hello\")   \n}")
+	output, saved := trm.TrimBytes(input)
 
-	if savedBytes <= 0 {
-		t.Errorf("expected savedBytes > 0, got %d", savedBytes)
+	if saved <= 0 {
+		t.Errorf("expected saved bytes > 0, got %d", saved)
 	}
 
 	if len(output) >= len(input) {
-		t.Errorf("expected trimmed output length to be smaller than input length")
+		t.Errorf("expected output length < input length")
+	}
+}
+
+func BenchmarkTrimmer_TrimBytes(b *testing.B) {
+	trm := trimmer.New()
+	input := []byte("func main()   {\n\n\n\n   fmt.Println(\"hello world testing\")   \n}")
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = trm.TrimBytes(input)
 	}
 }

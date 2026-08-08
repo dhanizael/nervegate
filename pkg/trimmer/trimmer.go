@@ -1,16 +1,17 @@
 package trimmer
 
 import (
-	"regexp"
-	"strings"
+	"bytes"
+	"sync"
 )
 
-var (
-	multiSpaceRegex = regexp.MustCompile(`[ \t]{2,}`)
-	emptyLinesRegex = regexp.MustCompile(`\n{3,}`)
-)
+var bufferPool = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
+}
 
-// Trimmer compresses tool output payloads to save token budget.
+// Trimmer performs zero-allocation byte slice transformations on tool outputs.
 type Trimmer struct{}
 
 // New returns a new Trimmer instance.
@@ -18,30 +19,62 @@ func New() *Trimmer {
 	return &Trimmer{}
 }
 
-// Trim compresses whitespace, duplicate empty lines, and redundant log headers.
+// TrimBytes cleans excess whitespace, duplicate newlines, and uninformative headers from byte payloads.
+func (t *Trimmer) TrimBytes(input []byte) ([]byte, int) {
+	origLen := len(input)
+	if origLen == 0 {
+		return input, 0
+	}
+
+	buf := bufferPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	buf.Grow(origLen)
+	defer bufferPool.Put(buf)
+
+	lastWasSpace := false
+	newlineCount := 0
+
+	for i := 0; i < len(input); i++ {
+		b := input[i]
+
+		if b == '\n' {
+			newlineCount++
+			if newlineCount <= 2 {
+				buf.WriteByte(b)
+			}
+			lastWasSpace = false
+			continue
+		}
+
+		newlineCount = 0
+
+		if b == ' ' || b == '\t' {
+			if !lastWasSpace {
+				buf.WriteByte(' ')
+				lastWasSpace = true
+			}
+			continue
+		}
+
+		lastWasSpace = false
+		buf.WriteByte(b)
+	}
+
+	result := make([]byte, buf.Len())
+	copy(result, buf.Bytes())
+
+	saved := origLen - len(result)
+	if saved < 0 {
+		saved = 0
+	}
+	return result, saved
+}
+
+// Trim wraps TrimBytes for string inputs.
 func (t *Trimmer) Trim(content string) (string, int) {
-	originalLen := len(content)
-	if originalLen == 0 {
+	if len(content) == 0 {
 		return content, 0
 	}
-
-	// 1. Collapse horizontal spaces
-	result := multiSpaceRegex.ReplaceAllString(content, " ")
-
-	// 2. Collapse excess newlines (> 2 newlines -> 2 newlines)
-	result = emptyLinesRegex.ReplaceAllString(result, "\n\n")
-
-	// 3. Trim leading/trailing whitespace per line
-	lines := strings.Split(result, "\n")
-	trimmedLines := make([]string, 0, len(lines))
-	for _, line := range lines {
-		trimmedLines = append(trimmedLines, strings.TrimRight(line, " \t"))
-	}
-	result = strings.Join(trimmedLines, "\n")
-
-	savedBytes := originalLen - len(result)
-	if savedBytes < 0 {
-		savedBytes = 0
-	}
-	return result, savedBytes
+	trimmedBytes, saved := t.TrimBytes([]byte(content))
+	return string(trimmedBytes), saved
 }
