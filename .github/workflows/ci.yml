@@ -1,0 +1,32 @@
+name: NerveGate CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (Linux amd64/arm64)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.26']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Run Unit Tests & Race Detector
+        run: go test -race -v ./pkg/classifier ./pkg/rotator ./pkg/trimmer ./pkg/ingress
+
+      - name: Run Microsecond Benchmarks
+        run: go test -bench=. ./pkg/classifier ./pkg/trimmer
+
+      - name: Build Binary
+        run: make build

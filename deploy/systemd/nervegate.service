@@ -1,0 +1,18 @@
+[Unit]
+Description=NerveGate Sub-Millisecond AI Gateway Daemon
+After=network.target
+
+[Service]
+Type=simple
+User=nervegate
+Group=nervegate
+ExecStart=/usr/local/bin/nervegate serve --port 8080 --socket /tmp/nervegate.sock
+Restart=always
+RestartSec=3s
+LimitNOFILE=65536
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
