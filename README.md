@@ -68,14 +68,14 @@ Modern AI agents generate hundreds of API requests per coding session. Standard 
 ```mermaid
 flowchart TD
     subgraph Client ["Local Linux Environment"]
-        A[Claude Code / Cursor / Agent Process]
+        A["Claude Code / Cursor / Agent Process"]
     end
 
     subgraph NerveGate ["NerveGate Core Engine (/tmp/nervegate.sock)"]
-        B[Unix Socket / HTTP2 Ingress]
-        C[RTK Payload Token Compressor]
-        D[Task Complexity Classifier Engine]
-        E[Key Pool Rotator & Failover State Machine]
+        B["Unix Socket / HTTP2 Ingress"]
+        C["RTK Payload Token Compressor"]
+        D["Task Complexity Classifier Engine"]
+        E["Key Pool Rotator & Failover State Machine"]
         
         B --> C
         C --> D
@@ -83,15 +83,15 @@ flowchart TD
     end
 
     subgraph Mesh ["Upstream Multi-Provider Mesh"]
-        E -->|FAST Tier (Score 0-25)| F[Gemini 2.5 Flash / DeepSeek V3]
-        E -->|STANDARD Tier (Score 25-60)| G[Claude 3.5 Sonnet / GPT-4o]
-        E -->|REASONING Tier (Score 60-100)| H[Claude 3.7 Sonnet / O3-Mini]
+        E -->|"FAST Tier (Score 0-25)"| F["Gemini 2.5 Flash / DeepSeek V3"]
+        E -->|"STANDARD Tier (Score 25-60)"| G["Claude 3.5 Sonnet / GPT-4o"]
+        E -->|"REASONING Tier (Score 60-100)"| H["Claude 3.7 Sonnet / O3-Mini"]
     end
 
-    A -->|IPC / Socket| B
-    F -->|Streaming SSE| A
-    G -->|Streaming SSE| A
-    H -->|Streaming SSE| A
+    A -->|"IPC / Socket"| B
+    F -->|"Streaming SSE"| A
+    G -->|"Streaming SSE"| A
+    H -->|"Streaming SSE"| A
 ```
 
 ---
