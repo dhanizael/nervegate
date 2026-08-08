@@ -1,0 +1,20 @@
+NerveGate
+Copyright (c) 2026 dhanizael & NerveGate Contributors
+
+This product includes software developed by the Maxim Bifrost project
+(https://github.com/maximhq/bifrost), licensed under the Apache License,
+Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+
+The directory pkg/bifrost_core/ contains a vendored, unmodified snapshot of
+the "core" module of Maxim Bifrost (Go module github.com/maximhq/bifrost/core),
+pinned to upstream commit 2c6f1328f6c4 (2026-08-06, "fail soft on
+invalid_encrypted_content by stripping replayed..."). The snapshot was
+verified file-by-file against that commit (go.mod, go.sum, utils.go, and
+bifrost.go byte-identical); the upstream tree carries no per-file copyright
+headers, so none are reproduced here.
+
+The full text of the Apache License 2.0 governing this component is included
+at pkg/bifrost_core/LICENSE, verbatim from the upstream repository.
+
+This vendored module is currently not linked into the NerveGate binary; it is
+retained for planned multi-provider routing support.
