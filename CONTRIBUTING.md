@@ -12,7 +12,7 @@ Thank you for your interest in contributing to **NerveGate**! We welcome contrib
 
 2. **Clone & Build:**
    ```bash
-   git clone https://github.com/hxmdxnx/nervegate.git
+   git clone https://github.com/dhanizael/nervegate.git
    cd nervegate
    make build
    ```

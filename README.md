@@ -1,24 +1,25 @@
 # NerveGate
 
-> **Sub-millisecond AI gateway and model orchestrator for Linux.**
+> **Low-latency AI gateway and model orchestrator for Linux.**
 
-`NerveGate` is a high-performance LLM proxy daemon built in Go. It operates over Unix domain sockets (`/tmp/nervegate.sock`) and TCP HTTP/2 to route AI agent requests with sub-microsecond overhead.
+`NerveGate` is a Go LLM proxy daemon. It listens on a Unix domain socket
+(`/tmp/nervegate.sock`) and TCP (`:8080`) and applies three operations to
+inbound chat-completion requests before forwarding them upstream:
 
----
-
-## Architecture
-
-NerveGate intercepts API calls from local AI agents (Claude Code, Cursor, Cline, custom subagents) and applies three sequential kernel/runtime-level operations:
-
-1. **Payload Compression (RTK):** Zero-allocation byte-slice transformation stripping redundant `git diff` headers, duplicate log lines, and whitespace noise.
-2. **Complexity Classification:** Dynamic multi-pass scoring mapping requests to target model tiers (`FAST`, `STANDARD`, `REASONING`) based on AST depth, context volume, and urgency tags.
-3. **Multi-Key Pool Failover:** Sliding-window rate limit tracking (RPM/TPM) with zero-latency fallback upon receiving HTTP 429 or 5xx responses.
+1. **Payload Compression:** byte-slice transformation that collapses runs of
+   whitespace and duplicate newlines in tool outputs (pooled buffers, single
+   allocation per request).
+2. **Complexity Classification:** heuristic multi-pass scoring that maps a
+   request to a model tier (`FAST`, `STANDARD`, `REASONING`) and flags
+   criticality. Tiers are currently exposed as response metadata headers and
+   are the hook for future model routing.
+3. **Multi-Key Pool Failover:** round-robin key selection with a sliding-window
+   rate limiter (RPM/TPM per key) and automatic cool-down when upstream
+   responds `429` or `5xx`.
 
 ```
-[Agent Process] ---> (/tmp/nervegate.sock) ---> [Trimmer] ---> [Classifier] ---> [Rotator] ---> [Upstream Provider]
+[Agent Process] ---> (:8080 | /tmp/nervegate.sock) ---> [Trimmer] ---> [Classifier] ---> [Rotator] ---> [Upstream]
 ```
-
----
 
 ## Quickstart
 
@@ -36,6 +37,22 @@ make build
 ./bin/nervegate serve --port 8080 --socket /tmp/nervegate.sock
 ```
 
+The daemon proxies to `https://api.openai.com` by default. Configure an
+upstream and a key pool with environment variables:
+
+```bash
+export NERVEGATE_UPSTREAM=https://api.openai.com   # any OpenAI-compatible base URL
+export NERVEGATE_PROVIDER=openai                   # provider pool name
+export NERVEGATE_KEYS_OPENAI=sk-aaa,sk-bbb         # comma-separated key pool
+export NERVEGATE_RPM_OPENAI=60                     # per-key requests/minute (0 = unlimited)
+export NERVEGATE_TPM_OPENAI=0                      # per-key tokens/minute (0 = unlimited)
+./bin/nervegate serve
+```
+
+When a key pool is configured, the gateway injects the rotated key and the
+caller's `Authorization` header is ignored. Without a pool, the caller's own
+`Authorization` header is passed through unchanged.
+
 ### OpenAI API Proxy Example
 
 ```bash
@@ -43,35 +60,48 @@ curl http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $OPENAI_API_KEY" \
   -d '{
-    "model": "auto",
+    "model": "gpt-4o",
     "messages": [
       {"role": "user", "content": "Fix deadlock in mutex handler"}
     ]
   }'
 ```
 
----
+Response metadata is returned in the headers:
 
-## Performance Metrics
+| Header | Meaning |
+| :--- | :--- |
+| `X-NerveGate-Latency-Us` | Gateway processing time in microseconds |
+| `X-NerveGate-Tier` | Classified model tier (`FAST`/`STANDARD`/`REASONING`) |
+| `X-NerveGate-Score` | Complexity score (0–100) |
+| `X-NerveGate-Trimmed-Bytes` | Bytes removed by the payload trimmer |
 
-| Metric | Target | Observed |
-| :--- | :--- | :--- |
-| **Gateway IPC Overhead** | < 10 µs | **1.41 µs** |
-| **RAM Consumption** | < 20 MB | **14.8 MB** |
-| **Concurrency (Go Race Detector)** | 0 Data Races | **0 Data Races** |
+## Security Notes
 
----
+- The TCP listener binds to all interfaces and is unauthenticated — front it
+  with a TLS-terminating reverse proxy and an allowlist in production.
+- The Unix socket is created with mode `0600`; clients must run as the same
+  user as the daemon.
+- Request bodies are capped at 32 MiB by default.
+
+## Performance
+
+`make bench` runs the microsecond benchmarks:
+
+```text
+BenchmarkTrimmer_TrimBytes-20    7606959    156.3 ns/op    64 B/op    1 allocs/op
+```
 
 ## Development
 
 ```bash
-make test-race   # Run unit tests with Go race detector enabled
-make bench       # Run microsecond latency benchmarks
-make lint        # Run golangci-lint
+make test-race   # Unit tests with the Go race detector
+make bench       # Microsecond latency benchmarks
+make lint        # golangci-lint (falls back to go vet)
 ```
-
----
 
 ## License
 
-MIT License © 2026 dhanizael & NerveGate Contributors.
+MIT — see [LICENSE](LICENSE). `pkg/bifrost_core/` is a vendored snapshot of
+the Apache-2.0 licensed [Maxim Bifrost](https://github.com/maximhq/bifrost)
+core (see [NOTICE](NOTICE)).

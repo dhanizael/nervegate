@@ -3,7 +3,7 @@ package classifier_test
 import (
 	"testing"
 
-	"github.com/hxmdxnx/nervegate/pkg/classifier"
+	"github.com/dhanizael/nervegate/pkg/classifier"
 )
 
 func BenchmarkClassifier_Classify(b *testing.B) {

@@ -25,6 +25,9 @@ jobs:
       - name: Run Unit Tests & Race Detector
         run: go test -race -v ./pkg/classifier ./pkg/rotator ./pkg/trimmer ./pkg/ingress
 
+      - name: Run go vet
+        run: go vet ./...
+
       - name: Run Microsecond Benchmarks
         run: go test -bench=. ./pkg/classifier ./pkg/trimmer
 

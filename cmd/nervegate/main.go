@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/hxmdxnx/nervegate/cmd/nervegate/commands"
+	"github.com/dhanizael/nervegate/cmd/nervegate/commands"
 )
 
 var (

@@ -3,7 +3,7 @@ package trimmer_test
 import (
 	"testing"
 
-	"github.com/hxmdxnx/nervegate/pkg/trimmer"
+	"github.com/dhanizael/nervegate/pkg/trimmer"
 )
 
 func TestTrimmer_TrimBytes(t *testing.T) {

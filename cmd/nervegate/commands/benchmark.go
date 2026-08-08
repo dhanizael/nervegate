@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hxmdxnx/nervegate/pkg/classifier"
-	"github.com/hxmdxnx/nervegate/pkg/trimmer"
+	"github.com/dhanizael/nervegate/pkg/classifier"
+	"github.com/dhanizael/nervegate/pkg/trimmer"
 	"github.com/spf13/cobra"
 )
 
