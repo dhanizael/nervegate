@@ -5,13 +5,19 @@ import (
 	"sync"
 )
 
+// maxPoolBufferSize caps the retained capacity of pooled buffers. Buffers that
+// grew beyond this (e.g. from one huge payload) are discarded instead of being
+// returned to the pool, so a single oversized request cannot permanently pin
+// memory in the process.
+const maxPoolBufferSize = 64 << 10 // 64 KiB
+
 var bufferPool = sync.Pool{
 	New: func() interface{} {
 		return new(bytes.Buffer)
 	},
 }
 
-// Trimmer performs zero-allocation byte slice transformations on tool outputs.
+// Trimmer performs allocation-light byte slice transformations on tool outputs.
 type Trimmer struct{}
 
 // New returns a new Trimmer instance.
@@ -19,7 +25,9 @@ func New() *Trimmer {
 	return &Trimmer{}
 }
 
-// TrimBytes cleans excess whitespace, duplicate newlines, and uninformative headers from byte payloads.
+// TrimBytes collapses runs of whitespace and duplicate newlines from byte
+// payloads. It reuses pooled buffers internally; the returned slice is a fresh
+// copy so callers may retain it safely.
 func (t *Trimmer) TrimBytes(input []byte) ([]byte, int) {
 	origLen := len(input)
 	if origLen == 0 {
@@ -29,7 +37,12 @@ func (t *Trimmer) TrimBytes(input []byte) ([]byte, int) {
 	buf := bufferPool.Get().(*bytes.Buffer)
 	buf.Reset()
 	buf.Grow(origLen)
-	defer bufferPool.Put(buf)
+	defer func() {
+		// Only keep buffers within the size cap in the pool.
+		if buf.Cap() <= maxPoolBufferSize {
+			bufferPool.Put(buf)
+		}
+	}()
 
 	lastWasSpace := false
 	newlineCount := 0
