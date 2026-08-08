@@ -1,3 +1,7 @@
-nervegate
+# Build artifacts
+/nervegate
+/bin/
+
+# Logs and sockets
 *.log
 *.sock
