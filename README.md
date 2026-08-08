@@ -71,7 +71,7 @@ Response metadata is returned in the headers:
 
 | Header | Meaning |
 | :--- | :--- |
-| `X-NerveGate-Latency-Us` | Gateway processing time in microseconds |
+| `X-NerveGate-Latency-Us` | Total request latency (gateway + upstream) in microseconds |
 | `X-NerveGate-Tier` | Classified model tier (`FAST`/`STANDARD`/`REASONING`) |
 | `X-NerveGate-Score` | Complexity score (0–100) |
 | `X-NerveGate-Trimmed-Bytes` | Bytes removed by the payload trimmer |
