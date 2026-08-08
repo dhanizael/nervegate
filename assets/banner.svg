@@ -1,0 +1,56 @@
+<svg width="1200" height="400" viewBox="0 0 1200 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="400" rx="16" fill="#0D1117"/>
+  <rect width="1200" height="400" rx="16" stroke="#30363D" stroke-width="2"/>
+  
+  <!-- Subtle Background Grid -->
+  <path d="M0 80H1200M0 160H1200M0 240H1200M0 320H1200" stroke="#161B22" stroke-width="1"/>
+  <path d="M200 0V400M400 0V400M600 0V400M800 0V400M1000 0V400" stroke="#161B22" stroke-width="1"/>
+  
+  <!-- Glowing Accents -->
+  <circle cx="200" cy="120" r="180" fill="#3B82F6" fill-opacity="0.12" filter="blur(60px)"/>
+  <circle cx="1000" cy="280" r="180" fill="#8B5CF6" fill-opacity="0.12" filter="blur(60px)"/>
+
+  <!-- Logo Icon -->
+  <g transform="translate(100, 130)">
+    <rect width="100" height="100" rx="24" fill="url(#grad_icon)"/>
+    <path d="M50 20V80M30 40L50 20L70 40M25 60H75" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Title Text -->
+  <text x="230" y="185" fill="#F0F6FC" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="64" font-weight="800" letter-spacing="-1.5">NerveGate</text>
+  
+  <!-- Tagline -->
+  <text x="230" y="225" fill="#8B949E" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="22" font-weight="500">The Sub-Millisecond Intelligent AI Gateway &amp; Model Orchestrator for Linux</text>
+  
+  <!-- Pill Badges -->
+  <!-- Pill 1: Latency -->
+  <g transform="translate(230, 260)">
+    <rect width="160" height="36" rx="18" fill="#1F1B38" stroke="#8B5CF6" stroke-width="1.5"/>
+    <text x="80" y="23" fill="#C4B5FD" font-family="monospace" font-size="14" font-weight="700" text-anchor="middle">⚡ 1.49 µs IPC</text>
+  </g>
+
+  <!-- Pill 2: Classifier -->
+  <g transform="translate(405, 260)">
+    <rect width="210" height="36" rx="18" fill="#16263B" stroke="#3B82F6" stroke-width="1.5"/>
+    <text x="105" y="23" fill="#93C5FD" font-family="monospace" font-size="14" font-weight="700" text-anchor="middle">🧠 Complexity Scorer</text>
+  </g>
+
+  <!-- Pill 3: Providers -->
+  <g transform="translate(630, 260)">
+    <rect width="170" height="36" rx="18" fill="#122B22" stroke="#10B981" stroke-width="1.5"/>
+    <text x="85" y="23" fill="#6EE7B7" font-family="monospace" font-size="14" font-weight="700" text-anchor="middle">🌐 23+ Providers</text>
+  </g>
+
+  <!-- Pill 4: RTK Compression -->
+  <g transform="translate(815, 260)">
+    <rect width="195" height="36" rx="18" fill="#2D1F18" stroke="#F97316" stroke-width="1.5"/>
+    <text x="97" y="23" fill="#FDBA74" font-family="monospace" font-size="14" font-weight="700" text-anchor="middle">🗜️ 20-40% Token Trim</text>
+  </g>
+
+  <defs>
+    <linearGradient id="grad_icon" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+</svg>
